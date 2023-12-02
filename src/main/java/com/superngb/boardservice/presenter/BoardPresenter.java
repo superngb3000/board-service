@@ -52,4 +52,14 @@ public class BoardPresenter implements BoardOutputBoundary {
     public List<BoardDtoModel> convertUser(List<BoardDtoModel> modelList) {
         return modelList;
     }
+
+    @Override
+    public boolean prepareBoardExistsView() {
+        return true;
+    }
+
+    @Override
+    public boolean prepareBoardDoesNotExistView() {
+        return false;
+    }
 }

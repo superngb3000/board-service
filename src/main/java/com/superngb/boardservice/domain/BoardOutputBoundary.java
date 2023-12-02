@@ -17,4 +17,6 @@ public interface BoardOutputBoundary {
     BoardDtoModel prepareSuccessDeleteBoardView(BoardDtoModel model);
     BoardDtoModel prepareFailDeleteBoardView();
     List<BoardDtoModel> convertUser(List<BoardDtoModel> modelList);
+    boolean prepareBoardExistsView();
+    boolean prepareBoardDoesNotExistView();
 }

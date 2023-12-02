@@ -1,5 +1,7 @@
 package com.superngb.boardservice.domain;
 
+import com.superngb.boardservice.client.CardServiceClient;
+import com.superngb.boardservice.client.UserServiceClient;
 import com.superngb.boardservice.entity.Board;
 import com.superngb.boardservice.model.BoardDtoModel;
 import com.superngb.boardservice.model.BoardPostModel;
@@ -7,7 +9,6 @@ import com.superngb.boardservice.model.BoardUpdateModel;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -18,31 +19,38 @@ public class BoardInteractor implements BoardInputBoundary {
 
     private final BoardDataAccess boardDataAccess;
     private final BoardOutputBoundary boardOutputBoundary;
+    private final CardServiceClient cardServiceClient;
+    private final UserServiceClient userServiceClient;
 
-    public BoardInteractor(BoardDataAccess boardDataAccess, BoardOutputBoundary boardOutputBoundary) {
+    public BoardInteractor(BoardDataAccess boardDataAccess,
+                           BoardOutputBoundary boardOutputBoundary,
+                           CardServiceClient cardServiceClient,
+                           UserServiceClient userServiceClient) {
         this.boardDataAccess = boardDataAccess;
         this.boardOutputBoundary = boardOutputBoundary;
+        this.cardServiceClient = cardServiceClient;
+        this.userServiceClient = userServiceClient;
     }
 
-    //TODO проверка на существование creator и users (запрос в user-service)
     @Override
     public BoardDtoModel createBoard(BoardPostModel boardPostModel) {
-        if (boardPostModel == null
-                || boardPostModel.getName() == null
-                || boardPostModel.getDescription() == null
-                || boardPostModel.getCreatorId() == null
-                || boardPostModel.getUsersId() == null) {
+        if (!userServiceClient.userExists(boardPostModel.getCreatorId())) {
             return boardOutputBoundary.prepareFailPostBoardView();
         }
-        if (!boardPostModel.getUsersId().contains(boardPostModel.getCreatorId())){
-            boardPostModel.setUsersId(new ArrayList<>(List.of(boardPostModel.getCreatorId())));
+        List<Long> usersId = new ArrayList<>(boardPostModel.getUsersId().stream()
+                .filter(u -> u != null && userServiceClient.userExists(u))
+                .sorted()
+                .distinct()
+                .toList());
+        if (!usersId.contains(boardPostModel.getCreatorId())) {
+            usersId.add(boardPostModel.getCreatorId());
         }
         return boardOutputBoundary.prepareSuccessPostBoardView(BoardDtoModel.mapper(
                 boardDataAccess.save(Board.builder()
                         .name(boardPostModel.getName())
                         .description(boardPostModel.getDescription())
                         .creatorId(boardPostModel.getCreatorId())
-                        .usersId(boardPostModel.getUsersId()).build())
+                        .usersId(usersId).build())
         ));
     }
 
@@ -64,7 +72,6 @@ public class BoardInteractor implements BoardInputBoundary {
         return boardOutputBoundary.convertUser(BoardDtoModel.mapper(boardDataAccess.findByUserId(id)));
     }
 
-    //TODO проверка на существование users (запрос в user-service)
     @Override
     public BoardDtoModel updateBoard(BoardUpdateModel boardUpdateModel) {
         Board boardById = boardDataAccess.findById(boardUpdateModel.getId());
@@ -72,7 +79,7 @@ public class BoardInteractor implements BoardInputBoundary {
             return boardOutputBoundary.prepareFailUpdateBoardView();
         }
         List<Long> usersId = new ArrayList<>(boardUpdateModel.getUsersId().stream()
-                .filter(Objects::nonNull)
+                .filter(u -> u != null && userServiceClient.userExists(u))
                 .sorted()
                 .distinct()
                 .toList());
@@ -89,12 +96,31 @@ public class BoardInteractor implements BoardInputBoundary {
         }
     }
 
-    //TODO удаление cards по удалению board (запрос в card-service)
     @Override
     public BoardDtoModel deleteBoard(Long id) {
         Board board = boardDataAccess.deleteById(id);
-        return (board == null)
-                ? boardOutputBoundary.prepareFailDeleteBoardView()
-                : boardOutputBoundary.prepareSuccessDeleteBoardView(BoardDtoModel.mapper(board));
+        if (board == null) {
+            return boardOutputBoundary.prepareFailDeleteBoardView();
+        }
+        cardServiceClient.deleteCardsByBoard(id);
+        return boardOutputBoundary.prepareSuccessDeleteBoardView(BoardDtoModel.mapper(board));
+    }
+
+    @Override
+    public void removeUserFromBoards(Long id) {
+        List<Board> boardList = boardDataAccess.findByUserId(id);
+        boardList.forEach(board -> {
+            List<Long> usersId= board.getUsersId();
+            usersId.remove(id);
+            board.setUsersId(usersId);
+            boardDataAccess.save(board);
+        });
+    }
+
+    @Override
+    public boolean boardExists(Long id) {
+        return (boardDataAccess.findById(id) != null)
+                ? boardOutputBoundary.prepareBoardExistsView()
+                : boardOutputBoundary.prepareBoardDoesNotExistView();
     }
 }

@@ -15,4 +15,6 @@ public interface BoardInputBoundary {
     List<BoardDtoModel> getBoardsByUserId(Long id);
     BoardDtoModel updateBoard(BoardUpdateModel boardUpdateModel);
     BoardDtoModel deleteBoard(Long id);
+    void removeUserFromBoards(Long id);
+    boolean boardExists(Long id);
 }

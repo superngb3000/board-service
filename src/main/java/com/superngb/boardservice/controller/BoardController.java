@@ -5,12 +5,13 @@ import com.superngb.boardservice.domain.BoardInputBoundary;
 import com.superngb.boardservice.model.BoardDtoModel;
 import com.superngb.boardservice.model.BoardPostModel;
 import com.superngb.boardservice.model.BoardUpdateModel;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-//@RequestMapping("/boards")
+@RequestMapping("/")
 public class BoardController {
     private final BoardInputBoundary boardInputBoundary;
 
@@ -19,7 +20,7 @@ public class BoardController {
     }
 
     @PostMapping
-    public BoardDtoModel postBoard(@RequestBody BoardPostModel model) {
+    public BoardDtoModel postBoard(@RequestBody @Valid BoardPostModel model) {
         return boardInputBoundary.createBoard(model);
     }
 
@@ -34,17 +35,27 @@ public class BoardController {
     }
 
     @GetMapping("/user/{id}")
-    public List<BoardDtoModel> getBoardsByUserId(@PathVariable Long id){
+    public List<BoardDtoModel> getBoardsByUserId(@PathVariable Long id) {
         return boardInputBoundary.getBoardsByUserId(id);
     }
 
     @PutMapping
-    public BoardDtoModel updateBoard(@RequestBody BoardUpdateModel model) {
+    public BoardDtoModel updateBoard(@RequestBody @Valid BoardUpdateModel model) {
         return boardInputBoundary.updateBoard(model);
     }
 
     @DeleteMapping("/{id}")
     public BoardDtoModel deleteBoard(@PathVariable Long id) {
         return boardInputBoundary.deleteBoard(id);
+    }
+
+    @PutMapping("/removeUser/{id}")
+    void removeUserFromBoards(@PathVariable Long id) {
+        boardInputBoundary.removeUserFromBoards(id);
+    }
+
+    @GetMapping("/boardExists/{id}")
+    boolean boardExists(@PathVariable Long id){
+        return boardInputBoundary.boardExists(id);
     }
 }

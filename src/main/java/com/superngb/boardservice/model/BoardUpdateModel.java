@@ -1,5 +1,6 @@
 package com.superngb.boardservice.model;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class BoardUpdateModel {
+    @NotNull
     private Long id;
     private String name;
     private String description;
