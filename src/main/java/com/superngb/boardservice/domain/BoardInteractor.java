@@ -37,13 +37,17 @@ public class BoardInteractor implements BoardInputBoundary {
         if (!userServiceClient.userExists(boardPostModel.getCreatorId())) {
             return boardOutputBoundary.prepareFailPostBoardView();
         }
-        List<Long> usersId = new ArrayList<>(boardPostModel.getUsersId().stream()
-                .filter(u -> u != null && userServiceClient.userExists(u))
-                .sorted()
-                .distinct()
-                .toList());
-        if (!usersId.contains(boardPostModel.getCreatorId())) {
+        List<Long> usersId;
+        if (boardPostModel.getUsersId() != null) {
+            usersId = boardPostModel.getUsersId();
             usersId.add(boardPostModel.getCreatorId());
+            usersId = usersId.stream()
+                    .filter(u -> u != null && userServiceClient.userExists(u))
+                    .sorted()
+                    .distinct()
+                    .toList();
+        } else {
+            usersId = new ArrayList<>(List.of(boardPostModel.getCreatorId()));
         }
         return boardOutputBoundary.prepareSuccessPostBoardView(BoardDtoModel.mapper(
                 boardDataAccess.save(Board.builder()
@@ -78,14 +82,16 @@ public class BoardInteractor implements BoardInputBoundary {
         if (boardById == null) {
             return boardOutputBoundary.prepareFailUpdateBoardView();
         }
-        List<Long> usersId = new ArrayList<>(boardUpdateModel.getUsersId().stream()
-                .filter(u -> u != null && userServiceClient.userExists(u))
-                .sorted()
-                .distinct()
-                .toList());
         updateFieldIfNotNull(boardUpdateModel.getName(), boardById::getName, boardById::setName);
         updateFieldIfNotNull(boardUpdateModel.getDescription(), boardById::getDescription, boardById::setDescription);
-        updateFieldIfNotNull(usersId, boardById::getUsersId, boardById::setUsersId);
+        if (boardUpdateModel.getUsersId() != null) {
+            List<Long> usersId = new ArrayList<>(boardUpdateModel.getUsersId().stream()
+                    .filter(u -> u != null && userServiceClient.userExists(u))
+                    .sorted()
+                    .distinct()
+                    .toList());
+            updateFieldIfNotNull(usersId, boardById::getUsersId, boardById::setUsersId);
+        }
         return boardOutputBoundary.prepareSuccessUpdateBoardView(BoardDtoModel.mapper(boardDataAccess.save(boardById)));
     }
 
@@ -110,7 +116,7 @@ public class BoardInteractor implements BoardInputBoundary {
     public void removeUserFromBoards(Long id) {
         List<Board> boardList = boardDataAccess.findByUserId(id);
         boardList.forEach(board -> {
-            List<Long> usersId= board.getUsersId();
+            List<Long> usersId = board.getUsersId();
             usersId.remove(id);
             board.setUsersId(usersId);
             boardDataAccess.save(board);
