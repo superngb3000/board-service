@@ -2,13 +2,13 @@ package com.superngb.boardservice.controller;
 
 
 import com.superngb.boardservice.domain.BoardInputBoundary;
-import com.superngb.boardservice.model.BoardDtoModel;
 import com.superngb.boardservice.model.BoardPostModel;
 import com.superngb.boardservice.model.BoardUpdateModel;
+import com.superngb.boardservice.model.ResponseModel;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/")
@@ -20,42 +20,44 @@ public class BoardController {
     }
 
     @PostMapping
-    public BoardDtoModel postBoard(@RequestBody @Valid BoardPostModel model) {
-        return boardInputBoundary.createBoard(model);
+    public ResponseEntity<?> postBoard(@RequestBody @Valid BoardPostModel model) {
+        ResponseModel<?> response = boardInputBoundary.createBoard(model);
+        return new ResponseEntity<>(response.getBody(), HttpStatus.valueOf(response.getCode()));
     }
 
     @GetMapping("/{id}")
-    public BoardDtoModel getBoard(@PathVariable Long id) {
-        return boardInputBoundary.getBoard(id);
+    public ResponseEntity<?> getBoard(@PathVariable Long id) {
+        ResponseModel<?> response = boardInputBoundary.getBoard(id);
+        return new ResponseEntity<>(response.getBody(), HttpStatus.valueOf(response.getCode()));
     }
 
     @GetMapping
-    public List<BoardDtoModel> getBoards() {
-        return boardInputBoundary.getBoards();
+    public ResponseEntity<?> getBoards() {
+        ResponseModel<?> response = boardInputBoundary.getBoards();
+        return new ResponseEntity<>(response.getBody(), HttpStatus.valueOf(response.getCode()));
     }
 
     @GetMapping("/user/{id}")
-    public List<BoardDtoModel> getBoardsByUserId(@PathVariable Long id) {
-        return boardInputBoundary.getBoardsByUserId(id);
+    public ResponseEntity<?> getBoardsByUserId(@PathVariable Long id) {
+        ResponseModel<?> response = boardInputBoundary.getBoardsByUserId(id);
+        return new ResponseEntity<>(response.getBody(), HttpStatus.valueOf(response.getCode()));
     }
 
     @PutMapping
-    public BoardDtoModel updateBoard(@RequestBody @Valid BoardUpdateModel model) {
-        return boardInputBoundary.updateBoard(model);
+    public ResponseEntity<?> updateBoard(@RequestBody @Valid BoardUpdateModel model) {
+        ResponseModel<?> response = boardInputBoundary.updateBoard(model);
+        return new ResponseEntity<>(response.getBody(), HttpStatus.valueOf(response.getCode()));
     }
 
     @DeleteMapping("/{id}")
-    public BoardDtoModel deleteBoard(@PathVariable Long id) {
-        return boardInputBoundary.deleteBoard(id);
+    public ResponseEntity<?> deleteBoard(@PathVariable Long id) {
+        ResponseModel<?> response = boardInputBoundary.deleteBoard(id);
+        return new ResponseEntity<>(response.getBody(), HttpStatus.valueOf(response.getCode()));
     }
 
     @PutMapping("/removeUser/{id}")
-    void removeUserFromBoards(@PathVariable Long id) {
-        boardInputBoundary.removeUserFromBoards(id);
-    }
-
-    @GetMapping("/boardExists/{id}")
-    boolean boardExists(@PathVariable Long id){
-        return boardInputBoundary.boardExists(id);
+    public ResponseEntity<?> removeUserFromBoards(@PathVariable Long id) {
+        ResponseModel<?> response = boardInputBoundary.removeUserFromBoards(id);
+        return new ResponseEntity<>(response.getBody(), HttpStatus.valueOf(response.getCode()));
     }
 }
