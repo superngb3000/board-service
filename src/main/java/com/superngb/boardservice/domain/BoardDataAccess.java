@@ -8,8 +8,12 @@ import java.util.List;
 @Component
 public interface BoardDataAccess {
     Board save(Board board);
+
     Board findById(Long id);
+
     List<Board> findByUserId(Long userId);
+
     List<Board> getBoards();
+
     Board deleteById(Long id);
 }

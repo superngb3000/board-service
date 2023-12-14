@@ -52,13 +52,13 @@ public class BoardInteractor implements BoardInputBoundary {
             usersId = new ArrayList<>(List.of(boardPostModel.getCreatorId()));
         }
         return ResponseModel.builder().code(201).body(
-                        BoardDtoModel.mapper(
-                                boardDataAccess.save(Board.builder()
-                                        .name(boardPostModel.getName())
-                                        .description(boardPostModel.getDescription())
-                                        .creatorId(boardPostModel.getCreatorId())
-                                        .usersId(usersId).build())))
-                .build();
+                BoardDtoModel.mapper(
+                        boardDataAccess.save(Board.builder()
+                                .name(boardPostModel.getName())
+                                .description(boardPostModel.getDescription())
+                                .creatorId(boardPostModel.getCreatorId())
+                                .usersId(usersId).build()))
+        ).build();
     }
 
     @Override

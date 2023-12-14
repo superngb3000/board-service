@@ -26,7 +26,7 @@ public class BoardDtoModel {
                 board.getUsersId());
     }
 
-    public static List<BoardDtoModel> mapper(List<Board> boardList){
+    public static List<BoardDtoModel> mapper(List<Board> boardList) {
         return boardList.stream()
                 .map(BoardDtoModel::mapper)
                 .toList();
